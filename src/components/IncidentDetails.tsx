@@ -25,7 +25,7 @@ import {
   STATUS_LABELS,
   STATUS_ICONS,
 } from "@/lib/geo";
-import L from "leaflet";
+import type { Map } from "leaflet";
 
 type Props = {
   report: Report | null;
@@ -41,7 +41,7 @@ export function IncidentDetails({ report, onClose, userPos, currentUserId, onVot
   const [submitting, setSubmitting] = useState(false);
   const [mediaExpanded, setMediaExpanded] = useState(false);
   const miniMapRef = useRef<HTMLDivElement>(null);
-  const miniMapInstance = useRef<L.Map | null>(null);
+  const miniMapInstance = useRef<Map | null>(null);
 
   // Initialize mini-map when report changes
   useEffect(() => {
@@ -54,8 +54,10 @@ export function IncidentDetails({ report, onClose, userPos, currentUserId, onVot
     }
 
     // Small delay to ensure the DOM is ready
-    const timer = setTimeout(() => {
+    const timer = setTimeout(async () => {
       if (!miniMapRef.current) return;
+
+      const L = (await import("leaflet")).default;
 
       const map = L.map(miniMapRef.current, {
         zoomControl: false,

@@ -1,5 +1,5 @@
-import { useEffect, useRef, useCallback } from "react";
-import L from "leaflet";
+import { useEffect, useRef, useCallback, useState } from "react";
+import type { Map, LayerGroup, Marker, Circle, DivIcon } from "leaflet";
 import type { Report, Ping } from "@/hooks/useLiveData";
 import {
   distanceMeters,
@@ -13,14 +13,6 @@ import {
   type LatLng,
 } from "@/lib/geo";
 
-// Fix default marker icons (Leaflet looks for them at /).
-delete (L.Icon.Default.prototype as unknown as { _getIconUrl?: unknown })._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-});
-
 type Props = {
   user: LatLng;
   radius: number;
@@ -32,7 +24,7 @@ type Props = {
 };
 
 /** Build an HTML div-icon for a report marker. */
-function buildMarkerIcon(report: Report, isNew: boolean): L.DivIcon {
+function buildMarkerIcon(L: any, report: Report, isNew: boolean): DivIcon {
   const color = report.status === "resolved"
     ? STATUS_COLORS.resolved
     : INCIDENT_COLORS[report.incident_type] || INCIDENT_COLORS.other;
@@ -62,12 +54,12 @@ function buildMarkerIcon(report: Report, isNew: boolean): L.DivIcon {
   });
 }
 
-export default function SafetyMap({ user, radius, reports, pings, onVoteReport, onConfirmPing, onSelectReport }: Props) {
+function SafetyMapInner({ L, user, radius, reports, pings, onVoteReport, onConfirmPing, onSelectReport }: Props & { L: any }) {
   const mapRef = useRef<HTMLDivElement>(null);
-  const mapInstance = useRef<L.Map | null>(null);
-  const layerGroup = useRef<L.LayerGroup | null>(null);
-  const userMarker = useRef<L.Marker | null>(null);
-  const radiusCircle = useRef<L.Circle | null>(null);
+  const mapInstance = useRef<Map | null>(null);
+  const layerGroup = useRef<LayerGroup | null>(null);
+  const userMarker = useRef<Marker | null>(null);
+  const radiusCircle = useRef<Circle | null>(null);
   const knownReportIds = useRef<Set<string>>(new Set());
 
   // Init map once.
@@ -119,7 +111,7 @@ export default function SafetyMap({ user, radius, reports, pings, onVoteReport, 
       fillOpacity: 0.06,
       dashArray: "6 6",
     }).addTo(map);
-  }, [user.lat, user.lng, radius]);
+  }, [user.lat, user.lng, radius, L]);
 
   // Handle marker pulse event from proximity alerts.
   useEffect(() => {
@@ -158,7 +150,7 @@ export default function SafetyMap({ user, radius, reports, pings, onVoteReport, 
       if (d > radius) return;
 
       const isNew = !knownReportIds.current.has(r.id) || isRecentReport(r.created_at, 5);
-      const icon = buildMarkerIcon(r, isNew);
+      const icon = buildMarkerIcon(L, r, isNew);
 
       const marker = L.marker([r.latitude, r.longitude], {
         icon,
@@ -255,9 +247,30 @@ export default function SafetyMap({ user, radius, reports, pings, onVoteReport, 
         });
       });
     });
-  }, [reports, pings, radius, user]);
+  }, [reports, pings, radius, user, L]);
 
   return <div ref={mapRef} className="absolute inset-0" />;
+}
+
+export default function SafetyMap(props: Props) {
+  const [L, setL] = useState<any>(null);
+
+  useEffect(() => {
+    import("leaflet").then((leafletModule) => {
+      const leaflet = leafletModule.default;
+      delete (leaflet.Icon.Default.prototype as unknown as { _getIconUrl?: unknown })._getIconUrl;
+      leaflet.Icon.Default.mergeOptions({
+        iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+        iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+        shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+      });
+      setL(leaflet);
+    });
+  }, []);
+
+  if (!L) return null;
+
+  return <SafetyMapInner L={L} {...props} />;
 }
 
 function escapeHtml(s: string) {
