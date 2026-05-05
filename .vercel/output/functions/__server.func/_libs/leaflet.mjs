@@ -1,14 +1,35 @@
 import { g as getDefaultExportFromCjs } from "./react.mjs";
-var leafletSrc$1 = { exports: {} };
-var leafletSrc = leafletSrc$1.exports;
+function _mergeNamespaces(n, m) {
+  for (var i = 0; i < m.length; i++) {
+    const e = m[i];
+    if (typeof e !== "string" && !Array.isArray(e)) {
+      for (const k in e) {
+        if (k !== "default" && !(k in n)) {
+          const d = Object.getOwnPropertyDescriptor(e, k);
+          if (d) {
+            Object.defineProperty(n, k, d.get ? d : {
+              enumerable: true,
+              get: function() {
+                return e[k];
+              }
+            });
+          }
+        }
+      }
+    }
+  }
+  return Object.freeze(n);
+}
+var leafletSrc$3 = { exports: {} };
+var leafletSrc$2 = leafletSrc$3.exports;
 var hasRequiredLeafletSrc;
 function requireLeafletSrc() {
-  if (hasRequiredLeafletSrc) return leafletSrc$1.exports;
+  if (hasRequiredLeafletSrc) return leafletSrc$3.exports;
   hasRequiredLeafletSrc = 1;
   (function(module, exports$1) {
     (function(global, factory) {
       factory(exports$1);
-    })(leafletSrc, (function(exports$12) {
+    })(leafletSrc$2, (function(exports$12) {
       var version = "1.9.4";
       function extend(dest) {
         var i, j, len, src;
@@ -9549,11 +9570,15 @@ function requireLeafletSrc() {
       };
       window.L = exports$12;
     }));
-  })(leafletSrc$1, leafletSrc$1.exports);
-  return leafletSrc$1.exports;
+  })(leafletSrc$3, leafletSrc$3.exports);
+  return leafletSrc$3.exports;
 }
 var leafletSrcExports = requireLeafletSrc();
-const L$1 = /* @__PURE__ */ getDefaultExportFromCjs(leafletSrcExports);
+const leafletSrc = /* @__PURE__ */ getDefaultExportFromCjs(leafletSrcExports);
+const leafletSrc$1 = /* @__PURE__ */ _mergeNamespaces({
+  __proto__: null,
+  default: leafletSrc
+}, [leafletSrcExports]);
 export {
-  L$1 as L
+  leafletSrc$1 as l
 };

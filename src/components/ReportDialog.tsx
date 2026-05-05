@@ -34,7 +34,7 @@ export function ReportDialog({ lat, lng, userId }: { lat: number; lng: number; u
     }
     setSubmitting(true);
 
-    let mediaUrl = null;
+    let mediaUrl: string | null = null;
     if (media) {
       const fileExt = media.name.split('.').pop();
       const fileName = `${userId}-${Date.now()}.${fileExt}`;
@@ -43,26 +43,26 @@ export function ReportDialog({ lat, lng, userId }: { lat: number; lng: number; u
         .upload(fileName, media);
 
       if (uploadError) {
-        toast.error(`Failed to upload media: ${uploadError.message}`);
-        setSubmitting(false);
-        return;
+        // Don't block report submission — just skip the media
+        console.warn("Media upload failed:", uploadError.message);
+        toast.warning("Media upload failed — submitting report without image");
+      } else {
+        const { data: publicUrlData } = supabase.storage
+          .from('incident-media')
+          .getPublicUrl(fileName);
+        mediaUrl = publicUrlData.publicUrl;
       }
-      
-      const { data: publicUrlData } = supabase.storage
-        .from('incident-media')
-        .getPublicUrl(fileName);
-        
-      mediaUrl = publicUrlData.publicUrl;
     }
 
-    const { error } = await supabase.from("reports").insert({
-      reporter_id: userId,
-      incident_type: parsed.data.incident_type,
-      severity: parsed.data.severity,
-      description: parsed.data.description || null,
-      latitude: lat,
-      longitude: lng,
-      image_url: mediaUrl,
+    // Use RPC function to bypass PostgREST schema cache issues
+    const { error } = await supabase.rpc('insert_report', {
+      p_reporter_id: userId,
+      p_incident_type: parsed.data.incident_type,
+      p_severity: parsed.data.severity,
+      p_description: parsed.data.description || null,
+      p_latitude: lat,
+      p_longitude: lng,
+      p_image_url: mediaUrl,
     });
     setSubmitting(false);
     if (error) {

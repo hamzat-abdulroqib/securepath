@@ -1,6 +1,6 @@
 import { r as reactExports, j as jsxRuntimeExports } from "../_libs/react.mjs";
 import { d as useNavigate, L as Link } from "../_libs/tanstack__react-router.mjs";
-import { s as supabase, T as Tabs, a as TabsList, b as TabsTrigger, c as TabsContent, B as Button, d as cn } from "./tabs-CBqX4d81.mjs";
+import { s as supabase, T as Tabs, a as TabsList, b as TabsTrigger, c as TabsContent, B as Button, d as cn } from "./tabs-Cp8eyMYz.mjs";
 import { R as Root } from "../_libs/radix-ui__react-label.mjs";
 import { c as cva } from "../_libs/class-variance-authority.mjs";
 import { T as Toaster, t as toast } from "../_libs/sonner.mjs";

@@ -1,6 +1,5 @@
 import { r as reactExports, j as jsxRuntimeExports } from "../_libs/react.mjs";
-import { L } from "../_libs/leaflet.mjs";
-import { d as distanceMeters, i as isRecentReport, S as SEVERITY_COLORS, a as STATUS_COLORS, I as INCIDENT_COLORS, f as formatDistance, H as HEAT_COLORS, b as INCIDENT_ICONS } from "./index-XxdfbfQE.mjs";
+import { d as distanceMeters, i as isRecentReport, S as SEVERITY_COLORS, a as STATUS_COLORS, I as INCIDENT_COLORS, f as formatDistance, H as HEAT_COLORS, b as INCIDENT_ICONS } from "./index-a5Ah3Nlb.mjs";
 import "../_libs/sonner.mjs";
 import "../_libs/tanstack__react-router.mjs";
 import "../_libs/tanstack__router-core.mjs";
@@ -16,7 +15,7 @@ import "crypto";
 import "async_hooks";
 import "stream";
 import "../_libs/isbot.mjs";
-import "./tabs-CBqX4d81.mjs";
+import "./tabs-Cp8eyMYz.mjs";
 import "../_libs/supabase__supabase-js.mjs";
 import "../_libs/supabase__postgrest-js.mjs";
 import "../_libs/supabase__realtime-js.mjs";
@@ -59,13 +58,7 @@ import "../_libs/aria-hidden.mjs";
 import "../_libs/lucide-react.mjs";
 import "../_libs/date-fns.mjs";
 import "../_libs/zod.mjs";
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png"
-});
-function buildMarkerIcon(report, isNew) {
+function buildMarkerIcon(L, report, isNew) {
   const color = report.status === "resolved" ? STATUS_COLORS.resolved : INCIDENT_COLORS[report.incident_type] || INCIDENT_COLORS.other;
   const emoji = INCIDENT_ICONS[report.incident_type] || INCIDENT_ICONS.other;
   const size = 36 + Math.min(10, report.confirmations_count * 2);
@@ -90,7 +83,7 @@ function buildMarkerIcon(report, isNew) {
     popupAnchor: [0, -(size / 2) - 4]
   });
 }
-function SafetyMap({ user, radius, reports, pings, onVoteReport, onConfirmPing, onSelectReport }) {
+function SafetyMapInner({ L, user, radius, reports, pings, onVoteReport, onConfirmPing, onSelectReport }) {
   const mapRef = reactExports.useRef(null);
   const mapInstance = reactExports.useRef(null);
   const layerGroup = reactExports.useRef(null);
@@ -137,7 +130,7 @@ function SafetyMap({ user, radius, reports, pings, onVoteReport, onConfirmPing, 
       fillOpacity: 0.06,
       dashArray: "6 6"
     }).addTo(map);
-  }, [user.lat, user.lng, radius]);
+  }, [user.lat, user.lng, radius, L]);
   reactExports.useEffect(() => {
     const handler = (e) => {
       const reportId = e.detail;
@@ -167,7 +160,7 @@ function SafetyMap({ user, radius, reports, pings, onVoteReport, onConfirmPing, 
       const d = distanceMeters(user, { lat: r.latitude, lng: r.longitude });
       if (d > radius) return;
       const isNew = !knownReportIds.current.has(r.id) || isRecentReport(r.created_at, 5);
-      const icon = buildMarkerIcon(r, isNew);
+      const icon = buildMarkerIcon(L, r, isNew);
       const marker = L.marker([r.latitude, r.longitude], {
         icon,
         zIndexOffset: r.status === "resolved" ? 100 : 500
@@ -237,12 +230,18 @@ function SafetyMap({ user, radius, reports, pings, onVoteReport, onConfirmPing, 
         icon: L.divIcon({ html, className: "", iconSize: [32, 32], iconAnchor: [16, 16] }),
         zIndexOffset: 900
       }).addTo(group);
-      const minsLeft = Math.max(0, Math.round((new Date(p.expires_at).getTime() - Date.now()) / 6e4));
+      const timeStr = new Intl.DateTimeFormat("en-US", {
+        hour: "numeric",
+        minute: "numeric",
+        hour12: true,
+        month: "short",
+        day: "numeric"
+      }).format(new Date(p.created_at));
       const popup = `
         <div style="font-family:Inter,sans-serif;min-width:200px;">
           <div style="font-weight:700;color:${HEAT_COLORS.danger};font-size:15px;margin-bottom:4px;">🚨 URGENT PING</div>
           <div style="font-size:12px;color:#555;margin-top:4px;">${formatDistance(d)} away · ${p.confirmations_count} confirms</div>
-          <div style="font-size:11px;color:#777;margin-top:2px;">Expires in ${minsLeft} min</div>
+          <div style="font-size:11px;color:#777;margin-top:2px;">Pinged at ${timeStr}</div>
           <button id="cping-${p.id}" style="margin-top:10px;width:100%;padding:8px 10px;border:0;border-radius:8px;background:${HEAT_COLORS.danger};color:white;font-weight:600;cursor:pointer;font-size:12px;">Confirm I see it</button>
         </div>`;
       marker.bindPopup(popup);
@@ -253,8 +252,27 @@ function SafetyMap({ user, radius, reports, pings, onVoteReport, onConfirmPing, 
         });
       });
     });
-  }, [reports, pings, radius, user]);
+  }, [reports, pings, radius, user, L]);
   return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { ref: mapRef, className: "absolute inset-0" });
+}
+function SafetyMap(props) {
+  const [L, setL] = reactExports.useState(null);
+  reactExports.useEffect(() => {
+    import("../_libs/leaflet.mjs").then(function(n) {
+      return n.l;
+    }).then((leafletModule) => {
+      const leaflet = leafletModule.default;
+      delete leaflet.Icon.Default.prototype._getIconUrl;
+      leaflet.Icon.Default.mergeOptions({
+        iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+        iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+        shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png"
+      });
+      setL(leaflet);
+    });
+  }, []);
+  if (!L) return null;
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(SafetyMapInner, { L, ...props });
 }
 function escapeHtml(s) {
   return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);

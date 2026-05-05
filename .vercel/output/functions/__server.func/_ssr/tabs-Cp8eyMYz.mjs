@@ -6,8 +6,8 @@ import { R as Root2, L as List, T as Trigger, C as Content } from "../_libs/radi
 import { c as clsx } from "../_libs/clsx.mjs";
 import { t as twMerge } from "../_libs/tailwind-merge.mjs";
 function createSupabaseClient() {
-  const SUPABASE_URL = "https://fwmsmmenlwalminaelzu.supabase.co";
-  const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ3bXNtbWVubHdhbG1pbmFlbHp1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0NDA5MTYsImV4cCI6MjA5MzAxNjkxNn0.sW57Tgee33n3i74gz9EwG25eNtN2JbDSJwnMBg6PI4s";
+  const SUPABASE_URL = "https://vfbeaxyxqjozqjjebqag.supabase.co";
+  const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_NBjb1pb3KX1xoNiCdzCI9w_QXieoKTe";
   return createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
     auth: {
       storage: typeof window !== "undefined" ? localStorage : void 0,

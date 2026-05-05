@@ -1,9 +1,8 @@
 import { r as reactExports, j as jsxRuntimeExports } from "../_libs/react.mjs";
 import { L as Link } from "../_libs/tanstack__react-router.mjs";
-import { s as supabase, B as Button, T as Tabs, a as TabsList, b as TabsTrigger, d as cn } from "./tabs-CBqX4d81.mjs";
+import { s as supabase, B as Button, T as Tabs, a as TabsList, b as TabsTrigger, d as cn } from "./tabs-Cp8eyMYz.mjs";
 import { R as Root, T as Trigger, P as Portal, C as Content, a as Close, b as Title, D as Description, O as Overlay } from "../_libs/radix-ui__react-dialog.mjs";
 import { t as toast, T as Toaster } from "../_libs/sonner.mjs";
-import { L } from "../_libs/leaflet.mjs";
 import { M as MapPin, B as Bell, L as LogOut, a as LogIn, b as ShieldAlert, c as Map, C as ChevronUp, d as List, P as Plus, T as TriangleAlert, e as Camera, X, f as TrendingUp, N as Navigation, g as Shield, h as Siren, i as Maximize2, j as Clock, k as ThumbsUp, l as ThumbsDown, m as ChevronDown, n as Send } from "../_libs/lucide-react.mjs";
 import { f as formatDistanceToNow, a as format } from "../_libs/date-fns.mjs";
 import { o as objectType, s as stringType, e as enumType } from "../_libs/zod.mjs";
@@ -117,7 +116,7 @@ function useLiveData() {
       const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1e3).toISOString();
       const [r, p] = await Promise.all([
         supabase.from("reports").select("*").gte("created_at", sevenDaysAgo).order("created_at", { ascending: false }).limit(500),
-        supabase.from("pings").select("*").gt("expires_at", (/* @__PURE__ */ new Date()).toISOString()).order("created_at", { ascending: false })
+        supabase.from("pings").select("*").order("created_at", { ascending: false }).limit(500)
       ]);
       if (!mounted) return;
       if (r.data) setReports(r.data);
@@ -150,13 +149,9 @@ function useLiveData() {
         return prev;
       });
     }).subscribe();
-    const tick = setInterval(() => {
-      setPings((prev) => prev.filter((p) => new Date(p.expires_at).getTime() > Date.now()));
-    }, 3e4);
     return () => {
       mounted = false;
       supabase.removeChannel(ch);
-      clearInterval(tick);
     };
   }, []);
   return { reports, pings, loading };
@@ -581,7 +576,8 @@ function PingButton({ lat, lng, userId }) {
     const { error } = await supabase.from("pings").insert({
       reporter_id: userId,
       latitude: lat,
-      longitude: lng
+      longitude: lng,
+      expires_at: new Date(Date.now() + 365 * 24 * 60 * 60 * 1e3).toISOString()
     });
     setSending(false);
     if (error) {
@@ -929,8 +925,11 @@ function IncidentDetails({ report, onClose, userPos, currentUserId, onVoteReport
       miniMapInstance.current.remove();
       miniMapInstance.current = null;
     }
-    const timer = setTimeout(() => {
+    const timer = setTimeout(async () => {
       if (!miniMapRef.current) return;
+      const L = (await import("../_libs/leaflet.mjs").then(function(n) {
+        return n.l;
+      })).default;
       const map = L.map(miniMapRef.current, {
         zoomControl: false,
         dragging: false,
@@ -1300,7 +1299,7 @@ function formatPrivacyName(name) {
   if (parts.length <= 1) return name;
   return `${parts[0]} ${parts[parts.length - 1][0]}.`;
 }
-const SafetyMap = reactExports.lazy(() => import("./SafetyMap-CS8uk_L4.mjs"));
+const SafetyMap = reactExports.lazy(() => import("./SafetyMap-qNr9PUpP.mjs"));
 function Index() {
   const {
     position,
