@@ -231,12 +231,19 @@ function SafetyMapInner({ L, user, radius, reports, pings, onVoteReport, onConfi
         zIndexOffset: 900,
       }).addTo(group);
 
-      const minsLeft = Math.max(0, Math.round((new Date(p.expires_at).getTime() - Date.now()) / 60_000));
+      const timeStr = new Intl.DateTimeFormat('en-US', {
+        hour: 'numeric',
+        minute: 'numeric',
+        hour12: true,
+        month: 'short',
+        day: 'numeric'
+      }).format(new Date(p.created_at));
+
       const popup = `
         <div style="font-family:Inter,sans-serif;min-width:200px;">
           <div style="font-weight:700;color:${HEAT_COLORS.danger};font-size:15px;margin-bottom:4px;">🚨 URGENT PING</div>
           <div style="font-size:12px;color:#555;margin-top:4px;">${formatDistance(d)} away · ${p.confirmations_count} confirms</div>
-          <div style="font-size:11px;color:#777;margin-top:2px;">Expires in ${minsLeft} min</div>
+          <div style="font-size:11px;color:#777;margin-top:2px;">Pinged at ${timeStr}</div>
           <button id="cping-${p.id}" style="margin-top:10px;width:100%;padding:8px 10px;border:0;border-radius:8px;background:${HEAT_COLORS.danger};color:white;font-weight:600;cursor:pointer;font-size:12px;">Confirm I see it</button>
         </div>`;
       marker.bindPopup(popup);

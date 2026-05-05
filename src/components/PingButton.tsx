@@ -18,6 +18,7 @@ export function PingButton({ lat, lng, userId }: { lat: number; lng: number; use
       reporter_id: userId,
       latitude: lat,
       longitude: lng,
+      expires_at: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
     });
     setSending(false);
     if (error) {

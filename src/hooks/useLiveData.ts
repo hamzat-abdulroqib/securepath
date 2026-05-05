@@ -38,7 +38,7 @@ export function useLiveData() {
       const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
       const [r, p] = await Promise.all([
         supabase.from("reports").select("*").gte("created_at", sevenDaysAgo).order("created_at", { ascending: false }).limit(500),
-        supabase.from("pings").select("*").gt("expires_at", new Date().toISOString()).order("created_at", { ascending: false }),
+        supabase.from("pings").select("*").order("created_at", { ascending: false }).limit(500),
       ]);
       if (!mounted) return;
       if (r.data) setReports(r.data as Report[]);
@@ -77,15 +77,9 @@ export function useLiveData() {
       })
       .subscribe();
 
-    // Tick every 30s to expire pings client-side.
-    const tick = setInterval(() => {
-      setPings((prev) => prev.filter((p) => new Date(p.expires_at).getTime() > Date.now()));
-    }, 30_000);
-
     return () => {
       mounted = false;
       supabase.removeChannel(ch);
-      clearInterval(tick);
     };
   }, []);
 
