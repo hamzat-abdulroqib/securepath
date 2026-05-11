@@ -30,7 +30,7 @@ export function FeedView({ reports, userPos, onSelectReport, filterTypes, filter
   const [tab, setTab] = useState<"all" | "near">("all");
   const [prevCount, setPrevCount] = useState(reports.length);
   const [newIds, setNewIds] = useState<Set<string>>(new Set());
-  const timerRef = useRef<ReturnType<typeof setTimeout>>();
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Track new items for animation
   useEffect(() => {

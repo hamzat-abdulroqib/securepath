@@ -402,39 +402,46 @@ function ReportDialog({ lat, lng, userId }) {
       return;
     }
     setSubmitting(true);
-    let mediaUrl = null;
-    if (media) {
-      const fileExt = media.name.split(".").pop();
-      const fileName = `${userId}-${Date.now()}.${fileExt}`;
-      const { error: uploadError } = await supabase.storage.from("incident-media").upload(fileName, media);
-      if (uploadError) {
-        toast.error(`Failed to upload media: ${uploadError.message}`);
-        setSubmitting(false);
+    try {
+      let mediaUrl = null;
+      if (media) {
+        const fileExt = media.name.split(".").pop();
+        const fileName = `${userId}-${Date.now()}.${fileExt}`;
+        const { error: uploadError } = await supabase.storage.from("incident-media").upload(fileName, media);
+        if (uploadError) {
+          console.warn("Media upload failed:", uploadError.message);
+          toast.warning("Media upload failed — submitting report without image");
+        } else {
+          const { data: publicUrlData } = supabase.storage.from("incident-media").getPublicUrl(fileName);
+          mediaUrl = publicUrlData.publicUrl;
+        }
+      }
+      const { error } = await supabase.from("reports").insert({
+        reporter_id: userId,
+        incident_type: parsed.data.incident_type,
+        severity: parsed.data.severity,
+        description: parsed.data.description || null,
+        latitude: lat,
+        longitude: lng,
+        image_url: mediaUrl
+      });
+      if (error) {
+        console.error("Report insert error:", error);
+        toast.error(`Failed to submit: ${error.message}`);
         return;
       }
-      const { data: publicUrlData } = supabase.storage.from("incident-media").getPublicUrl(fileName);
-      mediaUrl = publicUrlData.publicUrl;
+      toast.success("Report submitted — community alerted");
+      setDesc("");
+      setMedia(null);
+      setSeverity("medium");
+      setType("suspicious");
+      setOpen(false);
+    } catch (err) {
+      console.error("Unexpected error submitting report:", err);
+      toast.error("Something went wrong. Please try again.");
+    } finally {
+      setSubmitting(false);
     }
-    const { error } = await supabase.from("reports").insert({
-      reporter_id: userId,
-      incident_type: parsed.data.incident_type,
-      severity: parsed.data.severity,
-      description: parsed.data.description || null,
-      latitude: lat,
-      longitude: lng,
-      image_url: mediaUrl
-    });
-    setSubmitting(false);
-    if (error) {
-      toast.error(error.message);
-      return;
-    }
-    toast.success("Report submitted — community alerted");
-    setDesc("");
-    setMedia(null);
-    setSeverity("medium");
-    setType("suspicious");
-    setOpen(false);
   };
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(Dialog, { open, onOpenChange: setOpen, children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx(DialogTrigger, { asChild: true, children: /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { size: "lg", className: "rounded-full h-14 w-14 p-0 shadow-lg", "aria-label": "Report incident", children: /* @__PURE__ */ jsxRuntimeExports.jsx(Plus, { className: "h-6 w-6" }) }) }),
@@ -707,7 +714,7 @@ function FeedView({ reports, userPos, onSelectReport, filterTypes, filterSeverit
   const [tab, setTab] = reactExports.useState("all");
   const [prevCount, setPrevCount] = reactExports.useState(reports.length);
   const [newIds, setNewIds] = reactExports.useState(/* @__PURE__ */ new Set());
-  const timerRef = reactExports.useRef();
+  const timerRef = reactExports.useRef(null);
   reactExports.useEffect(() => {
     if (reports.length > prevCount) {
       const existingIds = new Set(reports.slice(reports.length - prevCount).map((r) => r.id));
@@ -1299,7 +1306,7 @@ function formatPrivacyName(name) {
   if (parts.length <= 1) return name;
   return `${parts[0]} ${parts[parts.length - 1][0]}.`;
 }
-const SafetyMap = reactExports.lazy(() => import("./SafetyMap-qNr9PUpP.mjs"));
+const SafetyMap = reactExports.lazy(() => import("./SafetyMap-SBYwkmVq.mjs"));
 function Index() {
   const {
     position,

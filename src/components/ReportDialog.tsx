@@ -34,47 +34,57 @@ export function ReportDialog({ lat, lng, userId }: { lat: number; lng: number; u
     }
     setSubmitting(true);
 
-    let mediaUrl: string | null = null;
-    if (media) {
-      const fileExt = media.name.split('.').pop();
-      const fileName = `${userId}-${Date.now()}.${fileExt}`;
-      const { error: uploadError } = await supabase.storage
-        .from('incident-media')
-        .upload(fileName, media);
-
-      if (uploadError) {
-        // Don't block report submission — just skip the media
-        console.warn("Media upload failed:", uploadError.message);
-        toast.warning("Media upload failed — submitting report without image");
-      } else {
-        const { data: publicUrlData } = supabase.storage
+    try {
+      let mediaUrl: string | null = null;
+      if (media) {
+        const fileExt = media.name.split('.').pop();
+        const fileName = `${userId}-${Date.now()}.${fileExt}`;
+        const { error: uploadError } = await supabase.storage
           .from('incident-media')
-          .getPublicUrl(fileName);
-        mediaUrl = publicUrlData.publicUrl;
-      }
-    }
+          .upload(fileName, media);
 
-    // Use RPC function to bypass PostgREST schema cache issues
-    const { error } = await supabase.rpc('insert_report', {
-      p_reporter_id: userId,
-      p_incident_type: parsed.data.incident_type,
-      p_severity: parsed.data.severity,
-      p_description: parsed.data.description || null,
-      p_latitude: lat,
-      p_longitude: lng,
-      p_image_url: mediaUrl,
-    });
-    setSubmitting(false);
-    if (error) {
-      toast.error(error.message);
-      return;
+        if (uploadError) {
+          // Don't block report submission — just skip the media
+          console.warn("Media upload failed:", uploadError.message);
+          toast.warning("Media upload failed — submitting report without image");
+        } else {
+          const { data: publicUrlData } = supabase.storage
+            .from('incident-media')
+            .getPublicUrl(fileName);
+          mediaUrl = publicUrlData.publicUrl;
+        }
+      }
+
+      // Direct table insert — works with existing RLS policy
+      const { error } = await supabase
+        .from('reports')
+        .insert({
+          reporter_id: userId,
+          incident_type: parsed.data.incident_type,
+          severity: parsed.data.severity,
+          description: parsed.data.description || null,
+          latitude: lat,
+          longitude: lng,
+          image_url: mediaUrl,
+        });
+
+      if (error) {
+        console.error("Report insert error:", error);
+        toast.error(`Failed to submit: ${error.message}`);
+        return;
+      }
+      toast.success("Report submitted — community alerted");
+      setDesc("");
+      setMedia(null);
+      setSeverity("medium");
+      setType("suspicious");
+      setOpen(false);
+    } catch (err) {
+      console.error("Unexpected error submitting report:", err);
+      toast.error("Something went wrong. Please try again.");
+    } finally {
+      setSubmitting(false);
     }
-    toast.success("Report submitted — community alerted");
-    setDesc("");
-    setMedia(null);
-    setSeverity("medium");
-    setType("suspicious");
-    setOpen(false);
   };
 
   return (

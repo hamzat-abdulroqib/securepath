@@ -95,7 +95,7 @@ const Route$1 = createFileRoute("/auth")({
   }),
   component: lazyRouteComponent($$splitComponentImporter$1, "component")
 });
-const $$splitComponentImporter = () => import("./index-a5Ah3Nlb.mjs").then((n) => n.c);
+const $$splitComponentImporter = () => import("./index-DhvjgmwT.mjs").then((n) => n.c);
 const Route = createFileRoute("/")({
   head: () => ({
     meta: [{

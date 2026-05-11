@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      comments: {
+        Row: {
+          id: string
+          report_id: string
+          user_id: string
+          content: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          report_id: string
+          user_id: string
+          content: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          report_id?: string
+          user_id?: string
+          content?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comments_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "reports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       confirmations: {
         Row: {
           created_at: string
@@ -116,6 +155,8 @@ export type Database = {
           latitude: number
           longitude: number
           reporter_id: string
+          severity: string
+          status: string
         }
         Insert: {
           confirmations_count?: number
@@ -128,6 +169,8 @@ export type Database = {
           latitude: number
           longitude: number
           reporter_id: string
+          severity?: string
+          status?: string
         }
         Update: {
           confirmations_count?: number
@@ -140,6 +183,8 @@ export type Database = {
           latitude?: number
           longitude?: number
           reporter_id?: string
+          severity?: string
+          status?: string
         }
         Relationships: []
       }
